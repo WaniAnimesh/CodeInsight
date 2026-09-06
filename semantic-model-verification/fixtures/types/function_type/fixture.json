@@ -1,0 +1,1 @@
+{"name":"function_type","category":"types","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"handler","kind":"Function","count":1,"declarations":1,"type_kind":"Function"}]}}

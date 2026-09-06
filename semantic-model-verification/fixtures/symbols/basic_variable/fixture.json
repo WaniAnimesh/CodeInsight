@@ -1,0 +1,1 @@
+{"name":"basic_variable","category":"symbols","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"basic_variable","kind":"Variable","count":1,"definitions":1,"type_kind":"Builtin","canonical_type":"int"}]}}

@@ -1,0 +1,292 @@
+{
+  "cases": [
+    {
+      "name": "class_template_member_calls",
+      "source": "struct Left; struct Right;\ntemplate<class Tag> struct Token {\n    explicit Token(int n) : n(n) {}\n    int value() const { return n; }\n    int n;\n};\nint main() { Token<Left> left(1); Token<Right> right(2); return left.value()+right.value(); }\n",
+      "checks": [
+        {
+          "name": "Two typed constructor calls are resolved",
+          "sql": "SELECT count(*) FROM relationships WHERE kind=8 AND observed_target_spelling='Token' AND target_symbol IS NOT NULL",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Two typed value calls are resolved",
+          "sql": "SELECT count(*) FROM relationships WHERE kind=8 AND observed_target_spelling='value' AND target_symbol IS NOT NULL",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Specialized member identities remain distinct",
+          "sql": "SELECT count(distinct target_symbol) FROM relationships WHERE kind=8 AND observed_target_spelling='value'",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Members link to their compiler primary",
+          "sql": "SELECT count(distinct r.source_id) FROM relationships r JOIN symbols s ON s.id=r.source_id WHERE r.kind=18 AND s.name='value'",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "destructor_semantics",
+      "source": "struct Parent { virtual ~Parent(); };\nParent::~Parent() = default;\nstruct Child : Parent { ~Child() override; };\nChild::~Child() = default;\nint main() { Child value; }\n",
+      "checks": [
+        {
+          "name": "Out-of-line defaulted destructors retain property",
+          "sql": "SELECT count(*) FROM symbols WHERE kind=9 AND qualified_name IN ('Parent::~Parent','Child::~Child') AND (function_flags & 8192)<>0",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Destructor override retained",
+          "sql": "SELECT count(*) FROM (SELECT DISTINCT source_id,target_symbol FROM relationships WHERE kind=13)",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Automatic local destruction retained",
+          "sql": "SELECT count(*)>0 FROM relationships WHERE kind=10",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "variable_template",
+      "source": "template<class T> inline constexpr bool compact = sizeof(T) < 8;\nint main() { return compact<int> ? 0 : 1; }\n",
+      "checks": [
+        {
+          "name": "Primary variable template retained",
+          "sql": "SELECT count(*)>0 FROM symbols WHERE name='compact' AND kind=21",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "table_straight_line",
+      "source": "#include <array>\nusing Callback = int (*)();\nstatic int alpha() { return 11; }\nstatic int beta() { return 22; }\nstatic const std::array<Callback, 2>& providers() {\n    static const auto cache = [] {\n        std::array<Callback, 2> entries{};\n        entries.fill(&alpha);\n        entries[0] = &beta;\n        return entries;\n    }();\n    return cache;\n}\nstatic unsigned select_slot(unsigned raw) { return static_cast<unsigned>(raw & 0U); }\nint main() { return providers()[select_slot(0)](); }\n",
+      "checks": [
+        {
+          "name": "A complete table proof must include the actual target beta",
+          "sql": "SELECT count(*) FROM indirect_call_summaries proof WHERE proof.complete=1 AND NOT EXISTS (SELECT 1 FROM indirect_selectable_targets t JOIN symbols s ON s.id=t.symbol_id WHERE t.summary_id=proof.id AND s.name='beta')",
+          "expected": [
+            [
+              0
+            ]
+          ]
+        },
+        {
+          "name": "Source pattern must not certify execution or escape safety",
+          "sql": "SELECT count(*) FROM indirect_call_summaries WHERE complete=1 OR storage_escapes=0",
+          "expected": [
+            [
+              0
+            ]
+          ]
+        },
+        {
+          "name": "Addressed callbacks remain retained",
+          "sql": "SELECT count(distinct s.name) FROM entry_roots r JOIN symbols s ON s.id=r.symbol_id WHERE r.kind=3 AND s.name IN ('alpha','beta')",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "One hint belongs to the actual indirect invocation",
+          "sql": "SELECT count(*) FROM indirect_call_summaries s JOIN relationships r ON r.id=s.call_observation WHERE r.kind=8 AND r.dispatch=3 AND s.complete=0",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "table_later_fill",
+      "source": "#include <array>\nusing Callback = int (*)();\nstatic int alpha() { return 11; }\nstatic int beta() { return 22; }\nstatic const std::array<Callback, 2>& providers() {\n    static const auto cache = [] {\n        std::array<Callback, 2> entries{};\n        entries[0] = &beta;\n        entries.fill(&alpha);\n        return entries;\n    }();\n    return cache;\n}\nstatic unsigned select_slot(unsigned raw) { return static_cast<unsigned>(raw & 0U); }\nint main() { return providers()[select_slot(0)](); }\n",
+      "checks": [
+        {
+          "name": "A complete table proof must include the actual target alpha",
+          "sql": "SELECT count(*) FROM indirect_call_summaries proof WHERE proof.complete=1 AND NOT EXISTS (SELECT 1 FROM indirect_selectable_targets t JOIN symbols s ON s.id=t.symbol_id WHERE t.summary_id=proof.id AND s.name='alpha')",
+          "expected": [
+            [
+              0
+            ]
+          ]
+        },
+        {
+          "name": "Source pattern must not certify execution or escape safety",
+          "sql": "SELECT count(*) FROM indirect_call_summaries WHERE complete=1 OR storage_escapes=0",
+          "expected": [
+            [
+              0
+            ]
+          ]
+        },
+        {
+          "name": "Addressed callbacks remain retained",
+          "sql": "SELECT count(distinct s.name) FROM entry_roots r JOIN symbols s ON s.id=r.symbol_id WHERE r.kind=3 AND s.name IN ('alpha','beta')",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "One hint belongs to the actual indirect invocation",
+          "sql": "SELECT count(*) FROM indirect_call_summaries s JOIN relationships r ON r.id=s.call_observation WHERE r.kind=8 AND r.dispatch=3 AND s.complete=0",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "table_conditional_write",
+      "source": "#include <array>\nusing Callback = int (*)();\nstatic int alpha() { return 11; }\nstatic int beta() { return 22; }\nstatic const std::array<Callback, 2>& providers() {\n    static const auto cache = [] {\n        std::array<Callback, 2> entries{};\n        entries.fill(&alpha);\n        if (false) entries[0] = &beta;\n        return entries;\n    }();\n    return cache;\n}\nstatic unsigned select_slot(unsigned raw) { return static_cast<unsigned>(raw & 0U); }\nint main() { return providers()[select_slot(0)](); }\n",
+      "checks": [
+        {
+          "name": "A complete table proof must include the actual target alpha",
+          "sql": "SELECT count(*) FROM indirect_call_summaries proof WHERE proof.complete=1 AND NOT EXISTS (SELECT 1 FROM indirect_selectable_targets t JOIN symbols s ON s.id=t.symbol_id WHERE t.summary_id=proof.id AND s.name='alpha')",
+          "expected": [
+            [
+              0
+            ]
+          ]
+        },
+        {
+          "name": "Source pattern must not certify execution or escape safety",
+          "sql": "SELECT count(*) FROM indirect_call_summaries WHERE complete=1 OR storage_escapes=0",
+          "expected": [
+            [
+              0
+            ]
+          ]
+        },
+        {
+          "name": "Addressed callbacks remain retained",
+          "sql": "SELECT count(distinct s.name) FROM entry_roots r JOIN symbols s ON s.id=r.symbol_id WHERE r.kind=3 AND s.name IN ('alpha','beta')",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "One hint belongs to the actual indirect invocation",
+          "sql": "SELECT count(*) FROM indirect_call_summaries s JOIN relationships r ON r.id=s.call_observation WHERE r.kind=8 AND r.dispatch=3 AND s.complete=0",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "automatic_storage_boundaries",
+      "source": "struct Guard { Guard() {} ~Guard() {} };\nGuard external;\nint use(Guard& ref, Guard* ptr) {\n static Guard persistent; thread_local Guard thread_value;\n Guard* pointer = ptr; Guard& reference = ref; Guard local; Guard array[2];\n return 0;\n}\nint main() { return use(external, &external); }\n",
+      "checks": [
+        {
+          "name": "Only local object and array have automatic cleanup",
+          "sql": "SELECT count(*) FROM relationships r JOIN symbols s ON s.id=r.source_id WHERE r.kind=10 AND s.name='use'",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "variable_template_identity",
+      "source": "namespace one { template<class T> constexpr int size = sizeof(T); }\nnamespace two { template<class T> constexpr int size = 2*sizeof(T); }\nint main() { return one::size<int> + two::size<char>; }\n",
+      "checks": [
+        {
+          "name": "Same spelling variable templates have distinct primary USRs",
+          "sql": "SELECT count(distinct usr) FROM symbols WHERE kind=21 AND name='size' AND (template_flags&1)<>0",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Concrete variable template uses preserve typed instantiations",
+          "sql": "SELECT count(distinct r.source_id) FROM relationships r JOIN symbols s ON s.id=r.source_id WHERE r.kind=18 AND s.kind=12 AND s.name='size'",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "returned_callable_invocations",
+      "source": "using Callback = int (*)();\nint alpha() { return 1; }\nCallback provide() { return &alpha; }\nstruct Table { Callback operator[](int) const { return &alpha; } };\nint main() { Table table; return provide()() + table[0](); }\n",
+      "checks": [
+        {
+          "name": "Returned pointer invocations stay distinct and unresolved",
+          "sql": "SELECT count(*) FROM relationships WHERE kind=8 AND dispatch=3 AND resolution=3",
+          "expected": [
+            [
+              2
+            ]
+          ]
+        },
+        {
+          "name": "Factory is called once, not substituted for its return value",
+          "sql": "SELECT count(*) FROM relationships WHERE kind=8 AND observed_target_spelling='provide' AND resolution=0",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "name": "Subscript operator is called once, not substituted for its element",
+          "sql": "SELECT count(*) FROM relationships WHERE kind=8 AND observed_target_spelling='operator[]' AND resolution=0",
+          "expected": [
+            [
+              1
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

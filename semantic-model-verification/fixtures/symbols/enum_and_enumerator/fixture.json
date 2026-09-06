@@ -1,0 +1,1 @@
+{"name":"enum_and_enumerator","category":"symbols","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Color","kind":"Enum","count":1,"definitions":1},{"qualified_name":"Color::Red","kind":"Enumerator","count":1},{"qualified_name":"Color::Blue","kind":"Enumerator","count":1}]}}

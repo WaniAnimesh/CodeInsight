@@ -1,0 +1,1 @@
+{"name":"override_relationship","category":"relationships","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Derived::draw","kind":"Method","properties":{"override":true,"virtual":true}}],"relationships":[{"source":"Derived::draw","kind":"Overrides","target":"Base::draw","resolution":"Exact"}]}}

@@ -1,0 +1,438 @@
+{
+  "name": "SymbolAtlas source contract; manually derived expectations",
+  "checks": [
+    {
+      "name": "Actual CMake sources: 12 files x 2 configurations",
+      "sql": "SELECT count(*),count(distinct source_file) FROM translation_units",
+      "expected": [
+        [
+          24,
+          12
+        ]
+      ],
+      "sources": [
+        {
+          "path": "CMakeLists.txt",
+          "contains": "add_library(AtlasCore STATIC"
+        }
+      ]
+    },
+    {
+      "name": "All selected translation units complete",
+      "sql": "SELECT quality,count(*) FROM revisions GROUP BY quality",
+      "expected": [
+        [
+          0,
+          24
+        ]
+      ]
+    },
+    {
+      "name": "Compiler probes and excluded broken fixtures not modeled",
+      "sql": "SELECT f.path FROM translation_units u JOIN files f ON f.id=u.source_file WHERE f.path LIKE '%/fixtures/%' OR f.path LIKE '%/compileridcxx/%'",
+      "expected": [],
+      "sources": [
+        {
+          "path": "CMakeLists.txt",
+          "contains": "add_custom_target(AtlasFixtures SOURCES"
+        }
+      ]
+    },
+    {
+      "name": "Three authoritative link targets",
+      "sql": "SELECT name,kind,topology_authoritative FROM build_targets ORDER BY name",
+      "expected": [
+        [
+          "AtlasCli",
+          1,
+          1
+        ],
+        [
+          "AtlasCore",
+          2,
+          1
+        ],
+        [
+          "AtlasTests",
+          5,
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "CMakeLists.txt",
+          "contains": "target_link_libraries(AtlasTests PRIVATE AtlasCore)"
+        }
+      ]
+    },
+    {
+      "name": "Both executables depend on core",
+      "sql": "SELECT a.name,b.name FROM target_dependencies d JOIN build_targets a ON a.id=d.consumer_id JOIN build_targets b ON b.id=d.dependency_id ORDER BY 1,2",
+      "expected": [
+        [
+          "AtlasCli",
+          "AtlasCore"
+        ],
+        [
+          "AtlasTests",
+          "AtlasCore"
+        ]
+      ]
+    },
+    {
+      "name": "Each selected TU belongs to one link target",
+      "sql": "SELECT count(*) FROM target_memberships",
+      "expected": [
+        [
+          24
+        ]
+      ]
+    },
+    {
+      "name": "Two process entry identities remain distinct",
+      "sql": "SELECT count(distinct logical_id) FROM symbols WHERE qualified_name='main'",
+      "expected": [
+        [
+          2
+        ]
+      ],
+      "sources": [
+        {
+          "path": "app/main.cpp",
+          "contains": "int main()"
+        }
+      ]
+    },
+    {
+      "name": "Runtime fixture strings do not become C++ symbols",
+      "sql": "SELECT qualified_name FROM symbols WHERE qualified_name LIKE 'atlas::engine::%' OR qualified_name LIKE 'bulk::partition_%'",
+      "expected": [],
+      "sources": [
+        {
+          "path": "tests/test_main.cpp",
+          "contains": "symbol.qualified_name = \"bulk::partition_\""
+        }
+      ]
+    },
+    {
+      "name": "Shared header symbol unifies within each configuration",
+      "sql": "SELECT count(*) FROM (SELECT u.configuration_id,count(distinct s.id) n FROM symbols s JOIN occurrences o ON o.symbol_id=s.id JOIN revisions r ON r.id=o.revision_id JOIN translation_units u ON u.id=r.tu_id WHERE s.qualified_name='atlas::SourceRange' GROUP BY u.configuration_id HAVING n<>1)",
+      "expected": [
+        [
+          0
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/model.hpp",
+          "contains": "struct SourceRange {"
+        }
+      ]
+    },
+    {
+      "name": "Forward declaration/definition share logical identity",
+      "sql": "SELECT count(distinct s.logical_id),count(distinct o.role) FROM symbols s JOIN occurrences o ON o.symbol_id=s.id WHERE s.qualified_name='atlas::IndexStore' AND o.role IN (0,1)",
+      "expected": [
+        [
+          1,
+          2
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/model_fwd.hpp",
+          "contains": "class IndexStore;"
+        }
+      ]
+    },
+    {
+      "name": "Resolver overloads stay separate",
+      "sql": "SELECT count(distinct usr),count(distinct logical_id) FROM symbols WHERE qualified_name='atlas::Resolver::resolve'",
+      "expected": [
+        [
+          3,
+          3
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/resolver.hpp",
+          "contains": "const std::vector<std::string>& argument_types) const;"
+        }
+      ]
+    },
+    {
+      "name": "Diagnostic append overloads stay separate",
+      "sql": "SELECT count(distinct usr) FROM symbols WHERE qualified_name='atlas::DiagnosticLedger::append'",
+      "expected": [
+        [
+          2
+        ]
+      ],
+      "sources": [
+        {
+          "path": "src/diagnostics.cpp",
+          "contains": "void DiagnosticLedger::append(std::vector<Diagnostic> diagnostics)"
+        }
+      ]
+    },
+    {
+      "name": "Static member definition unifies with declaration",
+      "sql": "SELECT count(distinct s.logical_id),count(distinct o.role) FROM symbols s JOIN occurrences o ON o.symbol_id=s.id WHERE s.qualified_name='atlas::IndexStore::transactions_started_' AND o.role IN (0,1)",
+      "expected": [
+        [
+          1,
+          2
+        ]
+      ],
+      "sources": [
+        {
+          "path": "src/index.cpp",
+          "contains": "std::atomic<std::uint64_t> IndexStore::transactions_started_{0};"
+        }
+      ]
+    },
+    {
+      "name": "Virtual diamond retains six distinct inheritance relations",
+      "sql": "SELECT DISTINCT s.qualified_name,t.qualified_name,r.is_virtual FROM relationships r JOIN symbols s ON s.id=r.source_id JOIN symbols t ON t.id=r.target_symbol WHERE r.kind=12 AND s.qualified_name IN ('atlas::NamedEntity','atlas::LocatedEntity','atlas::IndexedSymbol','atlas::SyntheticEntity') ORDER BY 1,2",
+      "expected": [
+        [
+          "atlas::IndexedSymbol",
+          "atlas::LocatedEntity",
+          0
+        ],
+        [
+          "atlas::IndexedSymbol",
+          "atlas::NamedEntity",
+          0
+        ],
+        [
+          "atlas::LocatedEntity",
+          "atlas::GraphEntity",
+          1
+        ],
+        [
+          "atlas::NamedEntity",
+          "atlas::GraphEntity",
+          1
+        ],
+        [
+          "atlas::SyntheticEntity",
+          "atlas::LocatedEntity",
+          0
+        ],
+        [
+          "atlas::SyntheticEntity",
+          "atlas::NamedEntity",
+          0
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/virtual_model.hpp",
+          "contains": "class NamedEntity : virtual public GraphEntity"
+        }
+      ]
+    },
+    {
+      "name": "Both describe overrides retain compiler relationships",
+      "sql": "SELECT DISTINCT s.qualified_name,t.qualified_name FROM relationships r JOIN symbols s ON s.id=r.source_id JOIN symbols t ON t.id=r.target_symbol WHERE r.kind=13 AND t.qualified_name='atlas::GraphEntity::describe' ORDER BY 1",
+      "expected": [
+        [
+          "atlas::IndexedSymbol::describe",
+          "atlas::GraphEntity::describe"
+        ],
+        [
+          "atlas::SyntheticEntity::describe",
+          "atlas::GraphEntity::describe"
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/virtual_model.hpp",
+          "contains": "std::string describe() const override;"
+        }
+      ]
+    },
+    {
+      "name": "Virtual base destructor override is represented",
+      "sql": "WITH RECURSIVE overrides(source,target) AS (SELECT source_id,target_symbol FROM relationships WHERE kind=13 AND target_symbol IS NOT NULL UNION SELECT o.source,r.target_symbol FROM overrides o JOIN relationships r ON r.source_id=o.target WHERE r.kind=13 AND r.target_symbol IS NOT NULL) SELECT count(*)>0 FROM overrides o JOIN symbols s ON s.id=o.source JOIN symbols t ON t.id=o.target WHERE s.qualified_name='atlas::IndexedSymbol::~IndexedSymbol' AND t.qualified_name='atlas::GraphEntity::~GraphEntity'",
+      "expected": [
+        [
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/virtual_model.hpp",
+          "contains": "~IndexedSymbol() override;"
+        }
+      ]
+    },
+    {
+      "name": "App ingest call binds exact declaration",
+      "sql": "SELECT DISTINCT t.qualified_name,r.resolution,r.dispatch FROM relationships r JOIN symbols s ON s.id=r.source_id JOIN symbols t ON t.id=r.target_symbol JOIN file_versions v ON v.id=r.file_version_id JOIN files f ON f.id=v.file_id WHERE r.kind=8 AND f.path LIKE '%/app/main.cpp' AND r.observed_target_spelling='ingest'",
+      "expected": [
+        [
+          "atlas::Analyzer::ingest",
+          0,
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "app/main.cpp",
+          "contains": "const atlas::AnalysisReport initial = analyzer.ingest("
+        }
+      ]
+    },
+    {
+      "name": "Config-specific debug/release branches stay separate",
+      "sql": "SELECT count(distinct r.revision_id) FROM relationships r JOIN symbols s ON s.id=r.source_id WHERE r.kind=8 AND s.qualified_name='atlas::Analyzer::summarize' AND r.observed_target_spelling='shrink_to_fit'",
+      "expected": [
+        [
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "src/analyzer.cpp",
+          "contains": "#elif ATLAS_DIAGNOSTIC_LEVEL == 1"
+        }
+      ]
+    },
+    {
+      "name": "Generated project header and version macro retained",
+      "sql": "SELECT count(*)>0 FROM macro_definitions m JOIN file_versions v ON v.id=m.file_version_id JOIN files f ON f.id=v.file_id WHERE m.name='ATLAS_VERSION_STRING' AND f.path LIKE '%/generated/atlas/build_config.hpp'",
+      "expected": [
+        [
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "build/vs/generated/atlas/build_config.hpp",
+          "contains": "#define ATLAS_VERSION_STRING \"1.4.0\""
+        }
+      ]
+    },
+    {
+      "name": "Primary/partial/explicit template identities stay distinct",
+      "sql": "SELECT count(distinct usr) FROM symbols WHERE qualified_name='atlas::TypeDescriptor' AND (template_flags&8)=0",
+      "expected": [
+        [
+          4
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/templates.hpp",
+          "contains": "struct TypeDescriptor<T*> {"
+        }
+      ]
+    },
+    {
+      "name": "Variable template declaration is retained",
+      "sql": "SELECT count(*)>0 FROM symbols WHERE name='has_qualified_name_v' AND kind=21",
+      "expected": [
+        [
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "include/atlas/templates.hpp",
+          "contains": "inline constexpr bool has_qualified_name_v = HasQualifiedName<T>::value;"
+        }
+      ]
+    },
+    {
+      "name": "StrongId member value calls bind compiler targets",
+      "sql": "SELECT count(*) FROM relationships r WHERE r.kind=8 AND r.observed_target_usr LIKE '%@S@StrongId>%@F@value#%' AND r.target_symbol IS NULL",
+      "expected": [
+        [
+          0
+        ]
+      ],
+      "sources": [
+        {
+          "path": "app/main.cpp",
+          "contains": "report.revision.value()"
+        }
+      ]
+    },
+    {
+      "name": "Out-of-line defaulted destructor property is retained",
+      "sql": "SELECT count(*) FROM symbols s JOIN occurrences o ON o.symbol_id=s.id WHERE s.qualified_name IN ('atlas::IndexStore::~IndexStore','atlas::GraphEntity::~GraphEntity','atlas::IndexedSymbol::~IndexedSymbol') AND o.role=1 AND (s.function_flags & 8192)=0",
+      "expected": [
+        [
+          0
+        ]
+      ],
+      "sources": [
+        {
+          "path": "src/virtual_model.cpp",
+          "contains": "GraphEntity::~GraphEntity() = default;"
+        }
+      ]
+    },
+    {
+      "name": "App automatic IndexStore destruction is represented",
+      "sql": "SELECT count(*)>0 FROM relationships r JOIN symbols s ON s.id=r.source_id JOIN symbols t ON t.id=r.target_symbol JOIN file_versions v ON v.id=r.file_version_id JOIN files f ON f.id=v.file_id WHERE r.kind=10 AND s.qualified_name='main' AND t.qualified_name='atlas::IndexStore::~IndexStore' AND f.path LIKE '%/app/main.cpp'",
+      "expected": [
+        [
+          1
+        ]
+      ],
+      "sources": [
+        {
+          "path": "app/main.cpp",
+          "contains": "atlas::IndexStore store{\"demonstration-workspace\"};"
+        }
+      ]
+    },
+    {
+      "name": "Unproved table index domain remains unknown",
+      "sql": "SELECT count(*) FROM indirect_call_summaries WHERE complete<>0 OR domain_kind<>0",
+      "expected": [
+        [
+          0
+        ]
+      ],
+      "sources": [
+        {
+          "path": "src/route_table.cpp",
+          "contains": "return static_cast<std::uint8_t>(raw_route & 1U);"
+        }
+      ]
+    },
+    {
+      "name": "All stored callbacks remain conservative candidates",
+      "sql": "SELECT s.qualified_name,count(*) FROM indirect_selectable_targets t JOIN symbols s ON s.id=t.symbol_id GROUP BY s.qualified_name ORDER BY 1",
+      "expected": [
+        [
+          "atlas::(anonymous namespace)::score_archival",
+          2
+        ],
+        [
+          "atlas::(anonymous namespace)::score_compat",
+          2
+        ],
+        [
+          "atlas::(anonymous namespace)::score_extent",
+          2
+        ],
+        [
+          "atlas::(anonymous namespace)::score_identity",
+          2
+        ]
+      ],
+      "sources": [
+        {
+          "path": "src/route_table.cpp",
+          "contains": "table[173] = &score_compat;"
+        }
+      ]
+    }
+  ]
+}

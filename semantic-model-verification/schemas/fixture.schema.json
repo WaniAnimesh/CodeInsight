@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codeinsight.dev/schemas/semantic-fixture.schema.json",
+  "title": "CodeInsight semantic conformance fixture",
+  "type": "object",
+  "required": ["name", "category", "sources", "expect"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "category": {"type": "string", "minLength": 1},
+    "language": {"enum": ["c", "c++"], "default": "c++"},
+    "standard": {"type": "string", "default": "c++20"},
+    "sources": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "include_paths": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "defines": {"type": "array", "items": {"type": "string"}},
+    "compiler_arguments": {"type": "array", "items": {"type": "string"}},
+    "expect": {"$ref": "expectations.schema.json"}
+  }
+}

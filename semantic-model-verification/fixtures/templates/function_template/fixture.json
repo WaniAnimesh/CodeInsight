@@ -1,0 +1,1 @@
+{"name":"function_template","category":"templates","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"convert","kind":"FunctionTemplate","count":1,"definitions":1,"properties":{"template_primary":true}}]}}

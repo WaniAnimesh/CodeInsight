@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codeinsight.dev/schemas/semantic-expectations.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "symbol": {
+      "type": "object",
+      "required": ["qualified_name"],
+      "properties": {
+        "qualified_name": {"type": "string"}, "kind": {"type": "string"},
+        "count": {"type": "integer", "minimum": 0},
+        "declarations": {"type": "integer", "minimum": 0},
+        "definitions": {"type": "integer", "minimum": 0},
+        "type_kind": {"type": "string"}, "canonical_type": {"type": "string"},
+        "properties": {"type": "object", "additionalProperties": {"type": "boolean"}}
+      }
+    },
+    "relationship": {
+      "type": "object", "required": ["source", "kind"],
+      "properties": {
+        "source": {"type": "string"}, "kind": {"type": "string"}, "target": {"type": "string"},
+        "count": {"type": "integer", "minimum": 0}, "resolution": {"type": "string"},
+        "dispatch": {"type": "string"}, "access": {"type": "string"},
+        "is_virtual": {"type": "boolean"}, "is_dependent": {"type": "boolean"}
+      }
+    }
+  },
+  "properties": {
+    "translation_units": {"type": "integer", "minimum": 0},
+    "failed_translation_units": {"type": "integer", "minimum": 0},
+    "symbols": {"type": "array", "items": {"$ref": "#/$defs/symbol"}},
+    "absent_symbols": {"type": "array", "items": {"$ref": "#/$defs/symbol"}},
+    "relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+    "absent_relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+    "type_equivalences": {"type": "array", "items": {"type": "object", "required": ["left", "right"], "properties": {"left": {"type": "string"}, "right": {"type": "string"}}}}
+  }
+}

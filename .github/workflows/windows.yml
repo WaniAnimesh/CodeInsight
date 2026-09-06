@@ -1,0 +1,26 @@
+name: windows
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        analysis: ["ON", "OFF"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "22.1.1"
+      - name: Configure
+        shell: pwsh
+        run: cmake -S . -B build -A x64 -DCODEINSIGHT_CLANG_ROOT="$env:LLVM_PATH" -DCODEINSIGHT_BUILD_ANALYSIS=${{ matrix.analysis }}
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        shell: pwsh
+        run: ctest --test-dir build -C Release --output-on-failure

@@ -1,0 +1,1 @@
+{"name":"forward_declaration_definition","category":"canonicalization","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Node","kind":"Struct","count":1,"declarations":1,"definitions":1}]}}

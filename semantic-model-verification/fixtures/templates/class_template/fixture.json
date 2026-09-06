@@ -1,0 +1,1 @@
+{"name":"class_template","category":"templates","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Box","kind":"ClassTemplate","count":1,"definitions":1,"properties":{"template_primary":true}}]}}

@@ -1,0 +1,1 @@
+{"name":"declaration_definition","category":"canonicalization","sources":["src/processor.cpp"],"include_paths":["include"],"expect":{"symbols":[{"qualified_name":"process","kind":"Function","count":1,"declarations":1,"definitions":1}]}}

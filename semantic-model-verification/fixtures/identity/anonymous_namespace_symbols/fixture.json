@@ -1,0 +1,1 @@
+{"name":"anonymous_namespace_symbols","category":"identity","sources":["src/a.cpp","src/b.cpp"],"expect":{"translation_units":2,"symbols":[{"qualified_name":"(anonymous namespace)::hidden","kind":"Function","count":2,"definitions":2}]}}

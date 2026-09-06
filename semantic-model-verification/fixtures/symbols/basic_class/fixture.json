@@ -1,0 +1,1 @@
+{"name":"basic_class","category":"symbols","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"BasicClass","kind":"Class","count":1,"definitions":1}],"absent_symbols":[{"qualified_name":"MissingClass"}]}}

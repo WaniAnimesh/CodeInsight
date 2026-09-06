@@ -1,0 +1,1 @@
+{"name":"virtual_inheritance","category":"relationships","sources":["src/main.cpp"],"expect":{"relationships":[{"source":"VirtualDerived","kind":"Inherits","target":"VirtualBase","access":"Public","is_virtual":true}]}}

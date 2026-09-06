@@ -1,0 +1,1 @@
+{"name":"partial_specialization","category":"templates","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Pair","kind":"ClassTemplate","count":2}],"relationships":[{"source":"Pair","kind":"Specializes","target":"Pair","count":1}]}}

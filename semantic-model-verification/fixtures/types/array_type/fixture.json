@@ -1,0 +1,1 @@
+{"name":"array_type","category":"types","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"values","kind":"Variable","type_kind":"Array"}]}}

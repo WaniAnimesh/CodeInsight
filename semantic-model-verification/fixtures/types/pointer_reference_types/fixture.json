@@ -1,0 +1,1 @@
+{"name":"pointer_reference_types","category":"types","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"pointer_value","kind":"Variable","type_kind":"Pointer"},{"qualified_name":"reference_value","kind":"Variable","type_kind":"LValueReference"}]}}

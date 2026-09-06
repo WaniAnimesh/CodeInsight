@@ -1,0 +1,1 @@
+{"name":"shared_header_two_tus","category":"canonicalization","sources":["src/a.cpp","src/b.cpp"],"include_paths":["include"],"expect":{"translation_units":2,"symbols":[{"qualified_name":"Shared","kind":"Struct","count":1,"definitions":2}]}}

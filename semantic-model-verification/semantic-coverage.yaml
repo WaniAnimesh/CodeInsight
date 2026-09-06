@@ -1,0 +1,31 @@
+symbol_kinds:
+  Function: {direct: true, cross_tu: true, incremental: false, deletion: false}
+  Class: {direct: true, cross_tu: true, incremental: false, deletion: false}
+  Variable: {direct: true, cross_tu: false, incremental: false, deletion: false}
+  Namespace: {direct: true, cross_tu: false, incremental: false, deletion: false}
+  Enum: {direct: true, cross_tu: false, incremental: false, deletion: false}
+  ClassTemplate: {direct: true, cross_tu: false, incremental: false, deletion: false}
+  FunctionTemplate: {direct: true, cross_tu: false, incremental: false, deletion: false}
+relationship_kinds:
+  Contains: {direct: true}
+  Calls: {direct: true, unresolved: true}
+  Reads: {direct: true}
+  Writes: {direct: true}
+  Constructs: {direct: true}
+  Destroys: {direct: true}
+  TakesAddress: {direct: true}
+  Inherits: {direct: true, multiple: true, virtual: true}
+  Overrides: {direct: true}
+  Specializes: {direct: true}
+type_kinds:
+  Builtin: true
+  Named: true
+  Pointer: true
+  LValueReference: true
+  Array: true
+  Function: true
+lifecycle:
+  incremental: true
+  deletion: true
+  clean_rebuild_equivalence: true
+  determinism: true

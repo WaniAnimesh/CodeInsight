@@ -1,0 +1,1 @@
+{"name":"namespace_symbol","category":"symbols","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"outer","kind":"Namespace","count":1},{"qualified_name":"outer::Nested","kind":"Struct","count":1,"definitions":1}],"relationships":[{"source":"outer","kind":"Contains","target":"outer::Nested","count":1}]}}

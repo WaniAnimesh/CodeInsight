@@ -1,0 +1,1 @@
+{"name":"builtin_types","category":"types","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"truth","kind":"Variable","type_kind":"Builtin","canonical_type":"bool"},{"qualified_name":"count","kind":"Variable","type_kind":"Builtin","canonical_type":"int"},{"qualified_name":"ratio","kind":"Variable","type_kind":"Builtin","canonical_type":"double"}]}}

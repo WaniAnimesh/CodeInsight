@@ -1,0 +1,1 @@
+{"name":"const_method_overload","category":"identity","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Widget::get","kind":"Method","count":2,"declarations":2}]}}

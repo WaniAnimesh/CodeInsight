@@ -1,0 +1,1 @@
+{"name":"dependent_call","category":"templates","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"execute","kind":"FunctionTemplate","count":1}],"relationships":[{"source":"execute","kind":"Calls","count":1,"resolution":"Unresolved"}]}}

@@ -1,0 +1,1 @@
+{"name":"cv_qualifiers","category":"types","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"constant_value","kind":"Variable","type_kind":"Builtin","canonical_type":"const int"},{"qualified_name":"volatile_value","kind":"Variable","type_kind":"Builtin","canonical_type":"volatile int"}]}}

@@ -1,0 +1,1 @@
+{"name":"simple_inheritance","category":"relationships","sources":["src/main.cpp"],"expect":{"symbols":[{"qualified_name":"Base","kind":"Struct"},{"qualified_name":"Derived","kind":"Struct"}],"relationships":[{"source":"Derived","kind":"Inherits","target":"Base","access":"Public"}]}}

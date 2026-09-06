@@ -1,0 +1,1 @@
+{"name":"object_lifecycle","category":"relationships","sources":["src/main.cpp"],"expect":{"relationships":[{"source":"exercise","kind":"Constructs","count":2},{"source":"exercise","kind":"Destroys"}]}}
